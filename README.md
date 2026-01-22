@@ -37,3 +37,7 @@ Run the application:
 ```shell
 mvn spring-boot:run
 ```
+
+## Schema diagram
+
+![Alt text](images/schema-diagram.png)
