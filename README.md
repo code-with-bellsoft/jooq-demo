@@ -6,7 +6,6 @@ A demo application demonstrating how to use jOOQ with Java.
 
 - Spring Boot 4
 - Java 25
-- Vaadin
 - PostgreSQL
 - jOOQ OSS
 - Docker Compose
