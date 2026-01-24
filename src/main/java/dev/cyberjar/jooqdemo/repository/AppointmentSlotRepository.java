@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static dev.cyberjar.jooqdemo.Tables.*;
+import static org.jooq.impl.DSL.count;
+import static org.jooq.impl.DSL.noCondition;
 
 @Repository
 public class AppointmentSlotRepository {
@@ -128,7 +130,6 @@ public class AppointmentSlotRepository {
             return SlotLockState.missing();
         }
 
-        // 2) Count active bookings while the slot is locked
         int active = ctx.fetchCount(
                 BOOKING,
                 BOOKING.APPOINTMENT_SLOT_ID.eq(slotId),
@@ -149,27 +150,53 @@ public class AppointmentSlotRepository {
         }
     }
 
-    List<SlotDto> findSlots(SlotFilter filter) {
+    public List<SlotDto> findSlots(SlotFilter filter) {
 
-        /*
+        boolean hasFacility = filter.facilityId() != null;
+        boolean hasDistrict = filter.districtId() != null;
 
-boolean condition = ...
-
-create.select(BOOK.ID)
-      .from(BOOK)
-      .where(condition ? BOOK.ID.eq(10) : noCondition())
-      .fetch();
-
--- If condition is true
-SELECT book.id FROM book WHERE book.id = 10
-
--- If condition is false
-SELECT book.id FROM book
-
-         */
-
-
-        return null;
+        return context.select(
+                        APPOINTMENT_SLOT.ID,
+                        FACILITY.ID,
+                        FACILITY.NAME,
+                        SPECIALTY.ID,
+                        SPECIALTY.NAME,
+                        APPOINTMENT_SLOT.STARTS_AT,
+                        APPOINTMENT_SLOT.ENDS_AT,
+                        APPOINTMENT_SLOT.CAPACITY
+                )
+                .from(APPOINTMENT_SLOT)
+                .join(FACILITY).on(FACILITY.ID.eq(APPOINTMENT_SLOT.FACILITY_ID))
+                .join(SPECIALTY).on(SPECIALTY.ID.eq(APPOINTMENT_SLOT.SPECIALTY_ID))
+                .leftJoin(BOOKING).on(
+                        BOOKING.APPOINTMENT_SLOT_ID.eq(APPOINTMENT_SLOT.ID)
+                                .and(BOOKING.STATUS.in(BookingStatus.RESERVED, BookingStatus.CONFIRMED))
+                )
+                .where(SPECIALTY.ID.eq(filter.specialtyId()))
+                .and(hasFacility ? FACILITY.ID.eq(filter.facilityId()) : noCondition())
+                .and(hasDistrict ? FACILITY.DISTRICT_ID.eq(filter.districtId()) : noCondition())
+                .groupBy(
+                        APPOINTMENT_SLOT.ID,
+                        FACILITY.ID,
+                        FACILITY.NAME,
+                        SPECIALTY.ID,
+                        SPECIALTY.NAME,
+                        APPOINTMENT_SLOT.STARTS_AT,
+                        APPOINTMENT_SLOT.ENDS_AT,
+                        APPOINTMENT_SLOT.CAPACITY
+                )
+                .having(count(BOOKING.ID).lt(APPOINTMENT_SLOT.CAPACITY))
+                .orderBy(APPOINTMENT_SLOT.STARTS_AT.asc())
+                .fetch(slotRecord -> new SlotDto(
+                        slotRecord.get(APPOINTMENT_SLOT.ID),
+                        slotRecord.get(FACILITY.ID),
+                        slotRecord.get(FACILITY.NAME),
+                        slotRecord.get(SPECIALTY.ID),
+                        slotRecord.get(SPECIALTY.NAME),
+                        slotRecord.get(APPOINTMENT_SLOT.STARTS_AT),
+                        slotRecord.get(APPOINTMENT_SLOT.ENDS_AT),
+                        slotRecord.get(APPOINTMENT_SLOT.CAPACITY)
+                ));
     }
 
 }

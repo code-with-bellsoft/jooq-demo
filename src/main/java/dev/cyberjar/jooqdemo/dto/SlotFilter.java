@@ -1,10 +1,9 @@
 package dev.cyberjar.jooqdemo.dto;
 
-import java.time.OffsetDateTime;
+
+import jakarta.validation.constraints.NotNull;
 
 public record SlotFilter(Long facilityId,
-                         Long specialtyId,
-                         OffsetDateTime from,
-                         OffsetDateTime to,
+                         @NotNull Long specialtyId,
                          Long districtId
 ) { }
