@@ -13,7 +13,7 @@ import java.util.List;
 public class JooqDemoApplication implements CommandLineRunner {
 
     private final AppointmentSlotService slotService;
-    private static final String slotPrint = "Slot %d%nFacility: %s (id=%d)%nSpecialty: %s (id=%d)%nTime: %s -> %s%nCapacity: %d%n";
+    private static final String SLOT_PRINT = "Slot %d%nFacility: %s (id=%d)%nSpecialty: %s (id=%d)%nTime: %s -> %s%nCapacity: %d%n";
 
 
     public JooqDemoApplication(AppointmentSlotService slotService) {
@@ -40,7 +40,7 @@ public class JooqDemoApplication implements CommandLineRunner {
 
         for (SlotDto slot : slotsWithFacility) {
             System.out.printf(
-                    slotPrint,
+                    SLOT_PRINT,
                     slot.id(),
                     slot.facilityName(), slot.facilityId(),
                     slot.specialtyName(), slot.specialtyId(),
@@ -53,7 +53,7 @@ public class JooqDemoApplication implements CommandLineRunner {
 
         for (SlotDto slot : slotsWithDistrict) {
             System.out.printf(
-                    slotPrint,
+                    SLOT_PRINT,
                     slot.id(),
                     slot.facilityName(), slot.facilityId(),
                     slot.specialtyName(), slot.specialtyId(),
@@ -67,7 +67,7 @@ public class JooqDemoApplication implements CommandLineRunner {
 
         for (SlotDto slot : slotsWithSpecialty) {
             System.out.printf(
-                    slotPrint,
+                    SLOT_PRINT,
                     slot.id(),
                     slot.facilityName(), slot.facilityId(),
                     slot.specialtyName(), slot.specialtyId(),
@@ -75,7 +75,6 @@ public class JooqDemoApplication implements CommandLineRunner {
                     slot.capacity()
             );
         }
-
 
     }
 }
