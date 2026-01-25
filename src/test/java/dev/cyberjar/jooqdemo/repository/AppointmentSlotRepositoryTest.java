@@ -1,7 +1,7 @@
 package dev.cyberjar.jooqdemo.repository;
 
 import dev.cyberjar.jooqdemo.dto.SlotDto;
-import dev.cyberjar.jooqdemo.dto.SlotFilter;
+import dev.cyberjar.jooqdemo.filter.SlotFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,7 +1,7 @@
 package dev.cyberjar.jooqdemo.service;
 
 import dev.cyberjar.jooqdemo.dto.SlotDto;
-import dev.cyberjar.jooqdemo.dto.SlotFilter;
+import dev.cyberjar.jooqdemo.filter.SlotFilter;
 import dev.cyberjar.jooqdemo.repository.AppointmentSlotRepository;
 import org.springframework.stereotype.Service;
 

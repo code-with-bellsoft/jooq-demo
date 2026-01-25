@@ -1,7 +1,7 @@
 package dev.cyberjar.jooqdemo.repository;
 
 import dev.cyberjar.jooqdemo.dto.SlotDto;
-import dev.cyberjar.jooqdemo.dto.SlotFilter;
+import dev.cyberjar.jooqdemo.filter.SlotFilter;
 import dev.cyberjar.jooqdemo.enums.BookingStatus;
 import org.jooq.DSLContext;
 import org.jooq.Record1;

@@ -1,4 +1,4 @@
-package dev.cyberjar.jooqdemo.dto;
+package dev.cyberjar.jooqdemo.filter;
 
 
 import jakarta.validation.constraints.NotNull;
