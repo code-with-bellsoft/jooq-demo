@@ -56,6 +56,21 @@ public class TriageRepository {
                                 bookingRecord.get(field("staff_handle", String.class))
                         )));
 
+        Field<List<LabResultDto>> results =
+                multiset(
+                        select(
+                                LAB_RESULT.RESULT_STATUS.as("result_status"),
+                                LAB_RESULT.PUBLISHED_AT.as("published_at")
+                        )
+                                .from(LAB_RESULT)
+                                .where(LAB_RESULT.LAB_ORDER_ID.eq(LAB_ORDER.ID))
+                                .orderBy(LAB_RESULT.PUBLISHED_AT.asc().nullsLast())
+                ).as("results")
+                        .convertFrom(rs -> rs.map(resultRecord -> new LabResultDto(
+                                String.valueOf(resultRecord.get(field("result_status"))),
+                                resultRecord.get(field("published_at", OffsetDateTime.class))
+                        )));
+
         Field<List<LabOrderDto>> labOrders =
                 multiset(
                         select(
@@ -63,21 +78,7 @@ public class TriageRepository {
                                 LAB_ORDER.TEST_CODE.as("test_code"),
                                 labFacility.NAME.as("lab_facility_name"),
                                 LAB_ORDER.ORDERED_AT.as("ordered_at"),
-
-                                multiset(
-                                        select(
-                                                LAB_RESULT.RESULT_STATUS.as("result_status"),
-                                                LAB_RESULT.PUBLISHED_AT.as("published_at")
-                                        )
-                                                .from(LAB_RESULT)
-                                                .where(LAB_RESULT.LAB_ORDER_ID.eq(LAB_ORDER.ID))
-                                                .orderBy(LAB_RESULT.PUBLISHED_AT.asc().nullsLast())
-                                ).as("results")
-                                        .convertFrom(r2 -> r2.map(rr -> new LabResultDto(
-                                                Optional.ofNullable(rr.get(field("result_status"))).map(Object::toString).orElse(null),
-                                                rr.get(field("published_at", OffsetDateTime.class))
-                                        )))
-                        )
+                                results)
                                 .from(LAB_ORDER)
                                 .join(labFacility).on(labFacility.ID.eq(LAB_ORDER.LAB_FACILITY_ID))
                                 .where(LAB_ORDER.TRIAGE_CASE_ID.eq(TRIAGE_CASE.ID))
@@ -88,7 +89,7 @@ public class TriageRepository {
                                 labOrderRecord.get(field("test_code", String.class)),
                                 labOrderRecord.get(field("lab_facility_name", String.class)),
                                 labOrderRecord.get(field("ordered_at", OffsetDateTime.class)),
-                                labOrderRecord.get(field("results", List.class))
+                                labOrderRecord.get(results)
                         )));
 
         return context.select(
