@@ -22,7 +22,7 @@ public class AppointmentSlotService {
         return repository.findSlots(filter);
     }
 
-    public Optional<SlotDto> findSlotById(long id) {
+    public Optional<SlotDto> findSlotById(Long id) {
         if (id <= 0) {
             return Optional.empty();
         }
