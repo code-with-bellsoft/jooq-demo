@@ -1,7 +1,6 @@
 package dev.cyberjar.jooqdemo.repository;
 
 import dev.cyberjar.jooqdemo.dto.SlotSuggestionDto;
-import dev.cyberjar.jooqdemo.enums.BookingStatus;
 import org.jooq.*;
 import org.springframework.stereotype.Repository;
 
