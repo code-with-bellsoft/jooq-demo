@@ -1,10 +1,7 @@
 package dev.cyberjar.jooqdemo;
 
-import dev.cyberjar.jooqdemo.dto.BookingDto;
-import dev.cyberjar.jooqdemo.dto.LabOrderDto;
-import dev.cyberjar.jooqdemo.dto.LabResultDto;
-import dev.cyberjar.jooqdemo.dto.TriageCaseDetailsDto;
-import dev.cyberjar.jooqdemo.service.AppointmentSlotService;
+import dev.cyberjar.jooqdemo.dto.*;
+import dev.cyberjar.jooqdemo.service.SchedulingService;
 import dev.cyberjar.jooqdemo.service.TriageService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -16,13 +13,13 @@ import java.util.Optional;
 @SpringBootApplication
 public class JooqDemoApplication implements CommandLineRunner {
 
-    private final AppointmentSlotService slotService;
     private final TriageService triageService;
+    private final SchedulingService schedulingService;
 
 
-    public JooqDemoApplication(AppointmentSlotService slotService, TriageService triageService) {
-        this.slotService = slotService;
+    public JooqDemoApplication(TriageService triageService, SchedulingService schedulingService) {
         this.triageService = triageService;
+        this.schedulingService = schedulingService;
     }
 
     public static void main(String[] args) {
@@ -32,6 +29,39 @@ public class JooqDemoApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
+        //showTriageCaseDemo();
+        showAppointmentSlotSuggestionDemo();
+
+
+    }
+
+    private void showAppointmentSlotSuggestionDemo() {
+
+        Long triageCaseId = 2L;
+        List<SlotSuggestionDto> suggestions = schedulingService.suggestSlotsForTriageCase(triageCaseId);
+
+
+        System.out.println("\n=== SUGGESTED APPOINTMENT SLOTS FOR TRIAGE CASE ===");
+
+        System.out.printf("%-6s  %-20s  %-20s  %-26s  %-12s  %-6s  %-9s%n",
+                "ID", "START", "END", "FACILITY", "DISTRICT", "SPECIALTY", "REMAIN_CAP");
+
+        for (SlotSuggestionDto s : suggestions) {
+            System.out.printf("%-6s  %-20s  %-20s  %-26s  %-12s  %-6s  %-9s%n",
+                    s.slotId(),
+                    s.slotStartsAt(),
+                    s.slotEndsAt(),
+                    s.facilityName(),
+                    s.districtName(),
+                    s.specialtyName(),
+                    s.remainingCapacity()
+            );
+        }
+
+
+    }
+
+    private void showTriageCaseDemo() {
         Long triageCaseId = 1L;
 
         Optional<TriageCaseDetailsDto> triageDto = triageService.findTriageCase(triageCaseId);
@@ -107,6 +137,5 @@ public class JooqDemoApplication implements CommandLineRunner {
                 }
             }
         }
-
     }
 }

@@ -86,11 +86,11 @@ public class SchedulingRepository {
         Field<Integer> activeBookings = selectCount()
                 .from(BOOKING)
                 .where(BOOKING.APPOINTMENT_SLOT_ID.eq(csSlotId))
-                .and(BOOKING.STATUS.in(BookingStatus.RESERVED, BookingStatus.CONFIRMED))
-                .asField("active_bookings");
+                .and(BOOKING.STATUS.cast(String.class).in("RESERVED", "CONFIRMED"))
+                .asField();
 
         Field<Integer> remainingCapacity =
-                greatest(inline(0), csCapacity.minus(coalesce(activeBookings, 0)))
+                greatest(inline(0), csCapacity.minus(activeBookings))
                         .as(REMAINING_CAPACITY_FIELD);
 
         CommonTableExpression<?> slotsWithRemainingCapacityCte =
