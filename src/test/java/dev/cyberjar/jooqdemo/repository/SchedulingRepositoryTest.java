@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Transactional
 @Rollback
-public class SchedulingRepositoryTest {
+class SchedulingRepositoryTest {
 
     @Autowired
     private SchedulingRepository schedulingRepository;
