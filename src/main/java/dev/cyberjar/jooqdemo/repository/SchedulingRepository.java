@@ -1,6 +1,5 @@
 package dev.cyberjar.jooqdemo.repository;
 
-import dev.cyberjar.jooqdemo.dto.FacilityDto;
 import dev.cyberjar.jooqdemo.dto.SlotSuggestionDto;
 import org.jooq.*;
 import org.springframework.stereotype.Repository;
@@ -155,43 +154,6 @@ public class SchedulingRepository {
                         slotRecord.get(swcSpecialtyName),
                         slotRecord.get(swcRemaining)
                 ));
-    }
-
-
-    /*
-
-    How to use a recursive CTE to find the best facilities for a triage case
-    based on the distance from the intake facility
-
-     */
-
-
-    public List<FacilityDto> findBestFacilitiesForTriageCase(Long triageCaseId) {
-
-        int maxTravelMinutes = 120;
-        int recursionLimit = 50;
-
-        CommonTableExpression<Record2<Long, Long>> caseContextCte =
-                name("case_context")
-                        .fields("intake_facility_id", "required_specialty_id")
-                        .as(select(
-                                TRIAGE_CASE.INTAKE_FACILITY_ID,
-                                TRIAGE_CASE.REQUIRED_SPECIALTY_ID
-                        )
-                                .from(TRIAGE_CASE)
-                                .where(TRIAGE_CASE.ID.eq(triageCaseId)));
-
-        Table<?> cc = caseContextCte.asTable("cc");
-
-        Field<Long> ccIntakeFacilityId = cc.field("intake_facility_id", Long.class);
-        Field<Long> ccRequiredSpecialtyId = cc.field("required_specialty_id", Long.class);
-
-
-
-
-
-
-        return null;
     }
 
 }
