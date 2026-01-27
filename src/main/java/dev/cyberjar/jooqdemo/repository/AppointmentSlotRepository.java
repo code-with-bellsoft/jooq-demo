@@ -150,6 +150,12 @@ public class AppointmentSlotRepository {
         }
     }
 
+    /*
+
+    How to use Optional conditional expressions
+
+     */
+
     public List<SlotDto> findSlots(SlotFilter filter) {
 
         boolean hasFacility = filter.facilityId() != null;

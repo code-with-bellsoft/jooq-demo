@@ -24,6 +24,14 @@ public class TriageRepository {
         this.context = context;
     }
 
+
+    /*
+
+    how to use multisets to collect the results of a non-scalar subquery
+    into a single nested collection value
+
+     */
+
     public Optional<TriageCaseDetailsDto> findTriageCase(Long triageCaseId) {
 
         var slotFacility = FACILITY.as("slot_facility");
