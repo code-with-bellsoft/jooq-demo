@@ -1,15 +1,14 @@
 package dev.cyberjar.jooqdemo.repository;
 
 import dev.cyberjar.jooqdemo.dto.SlotDto;
-import dev.cyberjar.jooqdemo.filter.SlotFilter;
 import dev.cyberjar.jooqdemo.enums.BookingStatus;
+import dev.cyberjar.jooqdemo.filter.SlotFilter;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static dev.cyberjar.jooqdemo.Tables.*;
@@ -54,15 +53,14 @@ public class AppointmentSlotRepository {
 
     public Long createSlot(SlotDto slotDto) {
 
-        return Objects.requireNonNull(
-                        context.insertInto(APPOINTMENT_SLOT)
-                                .set(APPOINTMENT_SLOT.FACILITY_ID, slotDto.facilityId())
-                                .set(APPOINTMENT_SLOT.SPECIALTY_ID, slotDto.specialtyId())
-                                .set(APPOINTMENT_SLOT.STARTS_AT, slotDto.startsAt())
-                                .set(APPOINTMENT_SLOT.ENDS_AT, slotDto.endsAt())
-                                .set(APPOINTMENT_SLOT.CAPACITY, slotDto.capacity())
-                                .returningResult(APPOINTMENT_SLOT.ID)
-                                .fetchOne())
+        return context.insertInto(APPOINTMENT_SLOT)
+                .set(APPOINTMENT_SLOT.FACILITY_ID, slotDto.facilityId())
+                .set(APPOINTMENT_SLOT.SPECIALTY_ID, slotDto.specialtyId())
+                .set(APPOINTMENT_SLOT.STARTS_AT, slotDto.startsAt())
+                .set(APPOINTMENT_SLOT.ENDS_AT, slotDto.endsAt())
+                .set(APPOINTMENT_SLOT.CAPACITY, slotDto.capacity())
+                .returningResult(APPOINTMENT_SLOT.ID)
+                .fetchOne()
                 .getValue(APPOINTMENT_SLOT.ID);
 
     }
