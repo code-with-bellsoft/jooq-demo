@@ -140,7 +140,7 @@ public class TriageRepository {
                 .where(TRIAGE_CASE.ID.eq(triageCaseId))
                 .fetchOptional(triageRecord -> new TriageCaseDetailsDto(
                         triageRecord.get(TRIAGE_CASE.ID),
-                        Optional.ofNullable(triageRecord.get(TRIAGE_CASE.STATUS)).map(Object::toString).orElse(null),
+                        triageRecord.get(TRIAGE_CASE.STATUS).toString(),
                         triageRecord.get(TRIAGE_CASE.CREATED_AT),
                         triageRecord.get(TRIAGE_CASE.SEVERITY),
                         triageRecord.get(PATIENT.PUBLIC_REF),
