@@ -5,10 +5,8 @@ import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import static dev.cyberjar.jooqdemo.Tables.*;
-import static org.jooq.impl.DSL.field;
 
 
 @Repository
@@ -45,7 +43,7 @@ public class StaffRepository {
                         staffRecord.get(STAFF.ACTIVE),
                         staffRecord.get(SPECIALTY.NAME),
                         staffRecord.get(FACILITY.NAME),
-                        Optional.ofNullable(staffRecord.get(field("type"))).map(Object::toString).orElse(null),
+                        staffRecord.get(FACILITY.TYPE).toString(),
                         staffRecord.get(DISTRICT.NAME)
                 ));
 
@@ -73,7 +71,7 @@ public class StaffRepository {
                         staffRecord.get(STAFF.ACTIVE),
                         staffRecord.get(STAFF.specialty().NAME),
                         staffRecord.get(STAFF.facility().NAME),
-                        Optional.ofNullable(staffRecord.get(field("type"))).map(Object::toString).orElse(null),
+                        staffRecord.get(FACILITY.TYPE).toString(),
                         staffRecord.get(STAFF.facility().district().NAME)
                 ));
 

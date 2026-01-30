@@ -24,6 +24,9 @@ public class SchedulingRepository {
     private static final String SPECIALTY_NAME_FIELD = "specialty_name";
     private static final String CAPACITY_FIELD = "capacity";
     private static final String REMAINING_CAPACITY_FIELD = "remaining_capacity";
+    private static final String REQUIRED_SPECIALTY_ID_FIELD = "required_specialty_id";
+    private static final String TRIAGE_CASE_ID_FIELD = "triage_case_id";
+
 
 
     public SchedulingRepository(DSLContext context) {
@@ -43,7 +46,7 @@ public class SchedulingRepository {
 
         CommonTableExpression<Record2<Long, Long>> caseContextCte =
                 name("case_context")
-                        .fields("triage_case_id", "required_specialty_id")
+                        .fields(TRIAGE_CASE_ID_FIELD, REQUIRED_SPECIALTY_ID_FIELD)
                         .as(
                                 select(TRIAGE_CASE.ID,
                                         TRIAGE_CASE.REQUIRED_SPECIALTY_ID)
@@ -51,7 +54,7 @@ public class SchedulingRepository {
                                         .where(TRIAGE_CASE.ID.eq(triageCaseId)));
 
         Table<?> cc = caseContextCte.asTable("cc");
-        Field<Long> ccRequiredSpecialtyId = cc.field("required_specialty_id", Long.class);
+        Field<Long> ccRequiredSpecialtyId = cc.field(REQUIRED_SPECIALTY_ID_FIELD, Long.class);
 
 
         CommonTableExpression<?> candidateSlotsCte =

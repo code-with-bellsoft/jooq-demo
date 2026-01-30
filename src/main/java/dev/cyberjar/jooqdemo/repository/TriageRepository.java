@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static dev.cyberjar.jooqdemo.Tables.*;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.multiset;
+import static org.jooq.impl.DSL.select;
 
 @Repository
 public class TriageRepository {
@@ -37,15 +38,36 @@ public class TriageRepository {
         var slotFacility = FACILITY.as("slot_facility");
         var labFacility = FACILITY.as("lab_facility");
 
+
+        Field<String> INTAKE_FACILITY_NAME = FACILITY.NAME.as("intake_facility_name");
+        Field<String> REQUIRED_SPECIALTY_NAME = SPECIALTY.NAME.as("required_specialty_name");
+
+
+        Field<Long> BOOKING_ID = BOOKING.ID.as("booking_id");
+        Field<?> BOOKING_STATUS = BOOKING.STATUS.as("booking_status"); // enum type depends on codegen
+        Field<OffsetDateTime> BOOKING_CREATED_AT = BOOKING.CREATED_AT.as("booking_created_at");
+        Field<String> BOOKING_FACILITY = slotFacility.NAME.as("slot_facility_name");
+        Field<OffsetDateTime> BOOKING_SLOT_START_AT = APPOINTMENT_SLOT.STARTS_AT.as("slot_starts_at");
+        Field<String> BOOKING_STAFF = STAFF.HANDLE.as("staff_handle");
+
+        Field<?> RESULT_STATUS = LAB_RESULT.RESULT_STATUS.as("result_status"); // enum type depends on codegen
+        Field<OffsetDateTime> RESULT_PUBLISHED_AT = LAB_RESULT.PUBLISHED_AT.as("published_at");
+
+        Field<Long> ORDER_ID = LAB_ORDER.ID.as("lab_order_id");
+        Field<String> ORDER_TEST_CODE = LAB_ORDER.TEST_CODE.as("test_code");
+        Field<String> ORDER_LAB_FACILITY = labFacility.NAME.as("lab_facility_name");
+        Field<OffsetDateTime> ORDER_ORDERED_AT = LAB_ORDER.ORDERED_AT.as("ordered_at");
+
+
         Field<List<BookingDto>> bookings =
                 multiset(
                         select(
-                                BOOKING.ID.as("booking_id"),
-                                BOOKING.STATUS.as("booking_status"),
-                                BOOKING.CREATED_AT.as("booking_created_at"),
-                                slotFacility.NAME.as("slot_facility_name"),
-                                APPOINTMENT_SLOT.STARTS_AT.as("slot_starts_at"),
-                                STAFF.HANDLE.as("staff_handle")
+                                BOOKING_ID,
+                                BOOKING_STATUS,
+                                BOOKING_CREATED_AT,
+                                BOOKING_FACILITY,
+                                BOOKING_SLOT_START_AT,
+                                BOOKING_STAFF
                         )
                                 .from(BOOKING)
                                 .join(APPOINTMENT_SLOT).on(APPOINTMENT_SLOT.ID.eq(BOOKING.APPOINTMENT_SLOT_ID))
@@ -55,37 +77,37 @@ public class TriageRepository {
                                 .orderBy(APPOINTMENT_SLOT.STARTS_AT.asc(), BOOKING.CREATED_AT.asc())
                 ).as("bookings")
                         .convertFrom(rs -> rs.map(bookingRecord -> new BookingDto(
-                                bookingRecord.get(field("booking_id", Long.class)),
+                                bookingRecord.get(BOOKING_ID),
 
-                                Optional.ofNullable(bookingRecord.get(field("booking_status"))).map(Object::toString).orElse(null),
-                                bookingRecord.get(field("booking_created_at", OffsetDateTime.class)),
-                                bookingRecord.get(field("slot_facility_name", String.class)),
-                                bookingRecord.get(field("slot_starts_at", OffsetDateTime.class)),
-                                bookingRecord.get(field("staff_handle", String.class))
+                                bookingRecord.get(BOOKING_STATUS).toString(),
+                                bookingRecord.get(BOOKING_CREATED_AT),
+                                bookingRecord.get(BOOKING_FACILITY),
+                                bookingRecord.get(BOOKING_SLOT_START_AT),
+                                bookingRecord.get(BOOKING_STAFF)
                         )));
 
         Field<List<LabResultDto>> results =
                 multiset(
                         select(
-                                LAB_RESULT.RESULT_STATUS.as("result_status"),
-                                LAB_RESULT.PUBLISHED_AT.as("published_at")
+                                RESULT_STATUS,
+                                RESULT_PUBLISHED_AT
                         )
                                 .from(LAB_RESULT)
                                 .where(LAB_RESULT.LAB_ORDER_ID.eq(LAB_ORDER.ID))
                                 .orderBy(LAB_RESULT.PUBLISHED_AT.asc().nullsLast())
                 ).as("results")
                         .convertFrom(rs -> rs.map(resultRecord -> new LabResultDto(
-                                String.valueOf(resultRecord.get(field("result_status"))),
-                                resultRecord.get(field("published_at", OffsetDateTime.class))
+                                String.valueOf(resultRecord.get(RESULT_STATUS)),
+                                resultRecord.get(RESULT_PUBLISHED_AT)
                         )));
 
         Field<List<LabOrderDto>> labOrders =
                 multiset(
                         select(
-                                LAB_ORDER.ID.as("lab_order_id"),
-                                LAB_ORDER.TEST_CODE.as("test_code"),
-                                labFacility.NAME.as("lab_facility_name"),
-                                LAB_ORDER.ORDERED_AT.as("ordered_at"),
+                                ORDER_ID,
+                                ORDER_TEST_CODE,
+                                ORDER_LAB_FACILITY,
+                                ORDER_ORDERED_AT,
                                 results)
                                 .from(LAB_ORDER)
                                 .join(labFacility).on(labFacility.ID.eq(LAB_ORDER.LAB_FACILITY_ID))
@@ -93,10 +115,10 @@ public class TriageRepository {
                                 .orderBy(LAB_ORDER.ORDERED_AT.asc())
                 ).as("lab_orders")
                         .convertFrom(rs -> rs.map(labOrderRecord -> new LabOrderDto(
-                                labOrderRecord.get(field("lab_order_id", Long.class)),
-                                labOrderRecord.get(field("test_code", String.class)),
-                                labOrderRecord.get(field("lab_facility_name", String.class)),
-                                labOrderRecord.get(field("ordered_at", OffsetDateTime.class)),
+                                labOrderRecord.get(ORDER_ID),
+                                labOrderRecord.get(ORDER_TEST_CODE),
+                                labOrderRecord.get(ORDER_LAB_FACILITY),
+                                labOrderRecord.get(ORDER_ORDERED_AT),
                                 labOrderRecord.get(results)
                         )));
 
@@ -106,8 +128,8 @@ public class TriageRepository {
                         TRIAGE_CASE.CREATED_AT,
                         TRIAGE_CASE.SEVERITY,
                         PATIENT.PUBLIC_REF,
-                        FACILITY.NAME.as("intake_facility_name"),
-                        SPECIALTY.NAME.as("required_specialty_name"),
+                        INTAKE_FACILITY_NAME,
+                        REQUIRED_SPECIALTY_NAME,
                         bookings,
                         labOrders
                 )
@@ -122,8 +144,8 @@ public class TriageRepository {
                         triageRecord.get(TRIAGE_CASE.CREATED_AT),
                         triageRecord.get(TRIAGE_CASE.SEVERITY),
                         triageRecord.get(PATIENT.PUBLIC_REF),
-                        triageRecord.get(field("intake_facility_name", String.class)),
-                        triageRecord.get(field("required_specialty_name", String.class)),
+                        triageRecord.get(INTAKE_FACILITY_NAME),
+                        triageRecord.get(REQUIRED_SPECIALTY_NAME),
                         triageRecord.get(bookings),
                         triageRecord.get(labOrders)
                 ));
