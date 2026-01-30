@@ -27,8 +27,16 @@ public class TriageRepository {
 
     /*
 
-    how to use multisets to collect the results of a non-scalar subquery
-    into a single nested collection value
+    This method shows how to use multisets to collect the results of a non-scalar subquery
+    into a single nested collection value. It:
+
+    * Loads a single triage case and returns a REST-ready object graph in one DB round trip.
+
+    * Uses jOOQ MULTISET to fetch nested collections: bookings (with slot facility + staff) and lab orders
+    * (each with nested lab results), avoiding N+1 queries and manual grouping.
+
+    * Returns Optional.empty() if the triage case id does not exist.
+
 
      */
 
