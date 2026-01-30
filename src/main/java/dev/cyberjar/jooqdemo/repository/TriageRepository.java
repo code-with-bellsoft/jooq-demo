@@ -18,10 +18,10 @@ import static org.jooq.impl.DSL.select;
 @Repository
 public class TriageRepository {
 
-    private final DSLContext context;
+    private final DSLContext db;
 
-    public TriageRepository(DSLContext context) {
-        this.context = context;
+    public TriageRepository(DSLContext db) {
+        this.db = db;
     }
 
 
@@ -97,7 +97,7 @@ public class TriageRepository {
                                 labOrderRecord.get(results)
                         )));
 
-        return context.select(
+        return db.select(
                         TRIAGE_CASE.ID,
                         TRIAGE_CASE.STATUS,
                         TRIAGE_CASE.CREATED_AT,

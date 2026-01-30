@@ -12,16 +12,16 @@ import static dev.cyberjar.jooqdemo.Tables.*;
 @Repository
 public class StaffRepository {
 
-    private final DSLContext context;
+    private final DSLContext db;
 
-    public StaffRepository(DSLContext context) {
-        this.context = context;
+    public StaffRepository(DSLContext db) {
+        this.db = db;
     }
 
 
     public List<StaffDto> findStaffBySpecialtyIdExplicitJoin(Long specialtyId) {
 
-        return context.select(
+        return db.select(
                         STAFF.ID,
                         STAFF.HANDLE,
                         STAFF.ACTIVE,
@@ -52,7 +52,7 @@ public class StaffRepository {
 
     public List<StaffDto> findStaffBySpecialtyIdImplicitJoin(Long specialtyId) {
 
-        return context.select(
+        return db.select(
                         STAFF.ID,
                         STAFF.HANDLE,
                         STAFF.ACTIVE,

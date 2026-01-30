@@ -18,14 +18,14 @@ import static org.jooq.impl.DSL.noCondition;
 @Repository
 public class AppointmentSlotRepository {
 
-    private final DSLContext context;
+    private final DSLContext db;
 
-    public AppointmentSlotRepository(DSLContext context) {
-        this.context = context;
+    public AppointmentSlotRepository(DSLContext db) {
+        this.db = db;
     }
 
     public Optional<SlotDto> findSlotById(Long id) {
-        return context.select(
+        return db.select(
                         APPOINTMENT_SLOT.ID,
                         FACILITY.ID,
                         FACILITY.NAME,
@@ -53,7 +53,7 @@ public class AppointmentSlotRepository {
 
     public Long createSlot(SlotDto slotDto) {
 
-        return context.insertInto(APPOINTMENT_SLOT)
+        return db.insertInto(APPOINTMENT_SLOT)
                 .set(APPOINTMENT_SLOT.FACILITY_ID, slotDto.facilityId())
                 .set(APPOINTMENT_SLOT.SPECIALTY_ID, slotDto.specialtyId())
                 .set(APPOINTMENT_SLOT.STARTS_AT, slotDto.startsAt())
@@ -67,7 +67,7 @@ public class AppointmentSlotRepository {
 
     public void updateSlot(Long slotId, int newCapacity) {
 
-        context.transactionResult(configuration -> {
+        db.transactionResult(configuration -> {
             DSLContext ctx = DSL.using(configuration);
 
             SlotLockState state = lockSlotAndCountActiveBookings(ctx, slotId);
@@ -94,7 +94,7 @@ public class AppointmentSlotRepository {
 
     public int deleteSlot(Long slotId) {
 
-        return context.transactionResult(configuration -> {
+        return db.transactionResult(configuration -> {
             DSLContext ctx = DSL.using(configuration);
 
             SlotLockState state = lockSlotAndCountActiveBookings(ctx, slotId);
@@ -159,7 +159,7 @@ public class AppointmentSlotRepository {
         boolean hasFacility = filter.facilityId() != null;
         boolean hasDistrict = filter.districtId() != null;
 
-        return context.select(
+        return db.select(
                         APPOINTMENT_SLOT.ID,
                         FACILITY.ID,
                         FACILITY.NAME,

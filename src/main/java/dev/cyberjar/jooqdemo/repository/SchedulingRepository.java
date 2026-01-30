@@ -14,7 +14,7 @@ import static org.jooq.impl.DSL.*;
 @Repository
 public class SchedulingRepository {
 
-    private final DSLContext context;
+    private final DSLContext db;
 
     private static final String SLOT_ID_FIELD = "slot_id";
     private static final String SLOT_STARTS_AT_FIELD = "slot_starts_at";
@@ -29,8 +29,8 @@ public class SchedulingRepository {
 
 
 
-    public SchedulingRepository(DSLContext context) {
-        this.context = context;
+    public SchedulingRepository(DSLContext db) {
+        this.db = db;
     }
 
     /*
@@ -132,7 +132,7 @@ public class SchedulingRepository {
         Field<String> swcSpecialtyName = swc.field(SPECIALTY_NAME_FIELD, String.class);
         Field<Integer> swcRemaining = swc.field(REMAINING_CAPACITY_FIELD, Integer.class);
 
-        return context.with(caseContextCte)
+        return db.with(caseContextCte)
                 .with(candidateSlotsCte)
                 .with(slotsWithRemainingCapacityCte)
                 .select(
