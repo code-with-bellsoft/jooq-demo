@@ -40,10 +40,10 @@ public class AppointmentSlotService {
         return repository.createSlot(slot);
     }
 
-    public int updateSlot(Long slotId, int newCapacity) {
+    public void updateSlot(Long slotId, int newCapacity) {
 
         if (newCapacity <= 0) throw new IllegalArgumentException("newCapacity must be > 0");
-        return repository.updateSlot(slotId, newCapacity);
+        repository.updateSlot(slotId, newCapacity);
     }
 
     public int deleteSlot(Long slotId) {

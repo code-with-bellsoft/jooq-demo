@@ -65,9 +65,9 @@ public class AppointmentSlotRepository {
 
     }
 
-    public int updateSlot(Long slotId, int newCapacity) {
+    public void updateSlot(Long slotId, int newCapacity) {
 
-        return context.transactionResult(configuration -> {
+        context.transactionResult(configuration -> {
             DSLContext ctx = DSL.using(configuration);
 
             SlotLockState state = lockSlotAndCountActiveBookings(ctx, slotId);
