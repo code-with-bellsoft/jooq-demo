@@ -20,7 +20,7 @@ public class AppointmentSlotController {
         this.appointmentSlotService = appointmentSlotService;
     }
 
-    @GetMapping
+    @PostMapping("/search")
     public ResponseEntity<List<SlotDto>> getAllSlots(@RequestBody SlotFilter filter) {
         return ResponseEntity.ok(appointmentSlotService.findSlots(filter));
     }

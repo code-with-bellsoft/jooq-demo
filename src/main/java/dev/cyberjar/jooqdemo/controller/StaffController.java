@@ -21,7 +21,7 @@ public class StaffController {
     }
 
     @GetMapping("/{specialtyId}")
-    public ResponseEntity<List<StaffDto>> getAllSlotsBySpecialtyId(@PathVariable Long specialtyId) {
+    public ResponseEntity<List<StaffDto>> getAllStuffBySpecialtyId(@PathVariable Long specialtyId) {
         return ResponseEntity.ok(staffService.findStaffBySpecialtyId(specialtyId));
     }
 
