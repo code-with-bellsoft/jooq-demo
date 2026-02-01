@@ -12,6 +12,13 @@ INSERT INTO facility(name, type, district_id) VALUES
                                                   ('Downtown General Hospital', 'HOSPITAL', (SELECT id FROM district WHERE name='Downtown')),
                                                   ('NeonCare Mobile Pod #7', 'MOBILE', (SELECT id FROM district WHERE name='Neon Heights'));
 
+-- 1) Add an additional clinic in Harbor district (so GM exists in more than one place)
+INSERT INTO facility(name, type, district_id)
+SELECT 'Harbor Community Clinic', 'CLINIC', d.id
+FROM district d
+WHERE d.name = 'Harbor'
+    ON CONFLICT (name) DO NOTHING;
+
 -- Transfer graph (directed)
 INSERT INTO facility_link(from_facility_id, to_facility_id, travel_minutes) VALUES
                                                                                 ((SELECT id FROM facility WHERE name='Kabuki Street Clinic'),
@@ -47,13 +54,26 @@ INSERT INTO staff(facility_id, specialty_id, handle, active) VALUES
                                                                  ((SELECT id FROM facility WHERE name='NeonCare Mobile Pod #7'),
                                                                   (SELECT id FROM specialty WHERE name='General Medicine'), 'med_pod7_01', TRUE);
 
+-- Optional: add GM staff for the new clinic
+INSERT INTO staff(facility_id, specialty_id, handle, active)
+SELECT f.id, s.id, 'doc_harbor_01', TRUE
+FROM facility f
+         JOIN specialty s ON s.name = 'General Medicine'
+WHERE f.name = 'Harbor Community Clinic'
+    ON CONFLICT (facility_id, handle) DO NOTHING;
+
 -- Patients (synthetic IDs)
 INSERT INTO patient(public_ref, created_at) VALUES
                                                 ('P-83K2X', '2026-01-19 09:10:00+00'),
                                                 ('P-19Q7M', '2026-01-19 12:40:00+00'),
                                                 ('P-5ZZ1A', '2026-01-20 07:05:00+00'),
                                                 ('P-4N0VQ', '2026-01-20 07:20:00+00'),
-                                                ('P-2A7TT', '2026-01-20 07:40:00+00');
+                                                ('P-2A7TT', '2026-01-20 07:40:00+00'),
+                                                ('P-7K9L2', '2026-01-20 08:10:00+00'),
+                                                ('P-0M3X8', '2026-01-20 08:12:00+00'),
+                                                ('P-4J2QA', '2026-01-20 08:15:00+00'),
+                                                ('P-9T1RN', '2026-01-20 08:18:00+00'),
+                                                ('P-6C0PP', '2026-01-20 08:20:00+00');
 
 -- Triage cases: enough variety for queue ranking + “unscheduled high severity”
 INSERT INTO triage_case(patient_id, intake_facility_id, required_specialty_id, severity, created_at, status) VALUES
@@ -80,7 +100,27 @@ INSERT INTO triage_case(patient_id, intake_facility_id, required_specialty_id, s
                                                                                                                  ((SELECT id FROM patient WHERE public_ref='P-2A7TT'),
                                                                                                                   (SELECT id FROM facility WHERE name='Downtown General Hospital'),
                                                                                                                   (SELECT id FROM specialty WHERE name='Radiology'),
-                                                                                                                  3, '2026-01-20 07:25:00+00', 'IN_TREATMENT');
+                                                                                                                  3, '2026-01-20 07:25:00+00', 'IN_TREATMENT'),
+                                                                                                                 ((SELECT p.id FROM patient p WHERE p.public_ref = 'P-7K9L2'),
+                                                                                                                  (SELECT f.id FROM facility f WHERE f.name = 'Kabuki Street Clinic'),
+                                                                                                                  (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                                                  3, '2026-01-20 08:25:00+00', 'WAITING'),
+                                                                                                                 ((SELECT p.id FROM patient p WHERE p.public_ref = 'P-0M3X8'),
+                                                                                                                  (SELECT f.id FROM facility f WHERE f.name = 'Kabuki Street Clinic'),
+                                                                                                                  (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                                                  2, '2026-01-20 08:26:00+00', 'WAITING'),
+                                                                                                                 ((SELECT p.id FROM patient p WHERE p.public_ref = 'P-4J2QA'),
+                                                                                                                  (SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+                                                                                                                  (SELECT s.id FROM specialty s WHERE s.name = 'Cardiology'),
+                                                                                                                  4, '2026-01-20 08:28:00+00', 'WAITING'),
+                                                                                                                 ((SELECT p.id FROM patient p WHERE p.public_ref = 'P-9T1RN'),
+                                                                                                                  (SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+                                                                                                                  (SELECT s.id FROM specialty s WHERE s.name = 'Radiology'),
+                                                                                                                  3, '2026-01-20 08:29:00+00', 'WAITING'),
+                                                                                                                 ((SELECT p.id FROM patient p WHERE p.public_ref = 'P-6C0PP'),
+                                                                                                                  (SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+                                                                                                                  (SELECT s.id FROM specialty s WHERE s.name = 'Radiology'),
+                                                                                                                  1, '2026-01-20 08:30:00+00', 'WAITING');
 
 -- Appointment slots (some will be filled via bookings)
 INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity) VALUES
@@ -99,6 +139,64 @@ INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capa
                                                                                           ((SELECT id FROM facility WHERE name='Downtown General Hospital'),
                                                                                            (SELECT id FROM specialty WHERE name='Radiology'),
                                                                                            '2026-01-20 11:00:00+00', '2026-01-20 11:30:00+00', 2);
+-- ---------- Extra appointment slots ----------
+-- Kabuki General Medicine: create a slot that will become FULL, and one that remains AVAILABLE due to CANCELLED booking
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity)
+VALUES ((SELECT f.id FROM facility f WHERE f.name = 'Kabuki Street Clinic'),
+        (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+        '2026-01-20 10:00:00+00', '2026-01-20 10:20:00+00', 1),
+       ((SELECT f.id FROM facility f WHERE f.name = 'Kabuki Street Clinic'),
+        (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+        '2026-01-20 10:20:00+00', '2026-01-20 10:40:00+00', 1);
+
+-- Downtown Cardiology: capacity 2, only one active booking -> AVAILABLE
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity)
+VALUES ((SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+        (SELECT s.id FROM specialty s WHERE s.name = 'Cardiology'),
+        '2026-01-20 10:30:00+00', '2026-01-20 11:00:00+00', 2);
+
+-- Downtown Radiology: create a slot that becomes FULL with 2 active bookings
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity)
+VALUES ((SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+        (SELECT s.id FROM specialty s WHERE s.name = 'Radiology'),
+        '2026-01-20 12:00:00+00', '2026-01-20 12:30:00+00', 2);
+
+-- 2) Add available GM slots to multiple facilities.
+--    No bookings are added for these slots -> they are available by definition.
+
+-- Mobile Pod #7 (Neon Heights)
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity) VALUES
+                                                                                          (
+                                                                                              (SELECT f.id FROM facility f WHERE f.name = 'NeonCare Mobile Pod #7'),
+                                                                                              (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                              '2026-01-20 13:00:00+00', '2026-01-20 13:20:00+00', 1
+                                                                                          ),
+                                                                                          (
+                                                                                              (SELECT f.id FROM facility f WHERE f.name = 'NeonCare Mobile Pod #7'),
+                                                                                              (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                              '2026-01-20 13:20:00+00', '2026-01-20 13:40:00+00', 2
+                                                                                          );
+
+-- Harbor Community Clinic (Harbor)
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity) VALUES
+                                                                                          (
+                                                                                              (SELECT f.id FROM facility f WHERE f.name = 'Harbor Community Clinic'),
+                                                                                              (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                              '2026-01-20 14:00:00+00', '2026-01-20 14:20:00+00', 1
+                                                                                          ),
+                                                                                          (
+                                                                                              (SELECT f.id FROM facility f WHERE f.name = 'Harbor Community Clinic'),
+                                                                                              (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+                                                                                              '2026-01-20 14:20:00+00', '2026-01-20 14:40:00+00', 1
+                                                                                          );
+
+-- Downtown General Hospital (Downtown) also offers GM slots (even if it’s mostly specialist care)
+INSERT INTO appointment_slot(facility_id, specialty_id, starts_at, ends_at, capacity) VALUES
+    (
+        (SELECT f.id FROM facility f WHERE f.name = 'Downtown General Hospital'),
+        (SELECT s.id FROM specialty s WHERE s.name = 'General Medicine'),
+        '2026-01-20 15:00:00+00', '2026-01-20 15:20:00+00', 2
+    );
 
 -- Bookings: create “scheduled vs unscheduled” situations
 INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, created_at) VALUES
@@ -141,6 +239,88 @@ INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, creat
                                                                                                'CONFIRMED',
                                                                                                '2026-01-20 07:02:00+00'
                                                                                            );
+-- ---------- Bookings for extra slots ----------
+-- Kabuki GM 10:00 slot capacity=1 -> FULL (CONFIRMED)
+INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, created_at)
+VALUES ((SELECT tc.id
+         FROM triage_case tc
+                  JOIN patient p ON p.id = tc.patient_id
+         WHERE p.public_ref = 'P-7K9L2'),
+        (SELECT aslt.id
+         FROM appointment_slot aslt
+                  JOIN facility f ON f.id = aslt.facility_id
+                  JOIN specialty s ON s.id = aslt.specialty_id
+         WHERE f.name = 'Kabuki Street Clinic'
+           AND s.name = 'General Medicine'
+           AND aslt.starts_at = '2026-01-20 10:00:00+00'),
+        (SELECT st.id FROM staff st WHERE st.handle = 'doc_kabuki_01'),
+        'CONFIRMED',
+        '2026-01-20 09:10:00+00');
+
+-- Kabuki GM 10:20 slot capacity=1 -> AVAILABLE because booking is CANCELLED (should not count as active)
+INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, created_at)
+VALUES ((SELECT tc.id
+         FROM triage_case tc
+                  JOIN patient p ON p.id = tc.patient_id
+         WHERE p.public_ref = 'P-0M3X8'),
+        (SELECT aslt.id
+         FROM appointment_slot aslt
+                  JOIN facility f ON f.id = aslt.facility_id
+                  JOIN specialty s ON s.id = aslt.specialty_id
+         WHERE f.name = 'Kabuki Street Clinic'
+           AND s.name = 'General Medicine'
+           AND aslt.starts_at = '2026-01-20 10:20:00+00'),
+        (SELECT st.id FROM staff st WHERE st.handle = 'doc_kabuki_01'),
+        'CANCELLED',
+        '2026-01-20 09:12:00+00');
+
+-- Downtown Cardiology 10:30 slot capacity=2 -> AVAILABLE (1 RESERVED booking)
+INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, created_at)
+VALUES ((SELECT tc.id
+         FROM triage_case tc
+                  JOIN patient p ON p.id = tc.patient_id
+         WHERE p.public_ref = 'P-4J2QA'),
+        (SELECT aslt.id
+         FROM appointment_slot aslt
+                  JOIN facility f ON f.id = aslt.facility_id
+                  JOIN specialty s ON s.id = aslt.specialty_id
+         WHERE f.name = 'Downtown General Hospital'
+           AND s.name = 'Cardiology'
+           AND aslt.starts_at = '2026-01-20 10:30:00+00'),
+        (SELECT st.id FROM staff st WHERE st.handle = 'cardio_dt_01'),
+        'RESERVED',
+        '2026-01-20 09:20:00+00');
+
+-- Downtown Radiology 12:00 slot capacity=2 -> FULL (2 active bookings: RESERVED + CONFIRMED)
+INSERT INTO booking(triage_case_id, appointment_slot_id, staff_id, status, created_at)
+VALUES ((SELECT tc.id
+         FROM triage_case tc
+                  JOIN patient p ON p.id = tc.patient_id
+         WHERE p.public_ref = 'P-9T1RN'),
+        (SELECT aslt.id
+         FROM appointment_slot aslt
+                  JOIN facility f ON f.id = aslt.facility_id
+                  JOIN specialty s ON s.id = aslt.specialty_id
+         WHERE f.name = 'Downtown General Hospital'
+           AND s.name = 'Radiology'
+           AND aslt.starts_at = '2026-01-20 12:00:00+00'),
+        (SELECT st.id FROM staff st WHERE st.handle = 'radio_dt_01'),
+        'RESERVED',
+        '2026-01-20 09:25:00+00'),
+       ((SELECT tc.id
+         FROM triage_case tc
+                  JOIN patient p ON p.id = tc.patient_id
+         WHERE p.public_ref = 'P-6C0PP'),
+        (SELECT aslt.id
+         FROM appointment_slot aslt
+                  JOIN facility f ON f.id = aslt.facility_id
+                  JOIN specialty s ON s.id = aslt.specialty_id
+         WHERE f.name = 'Downtown General Hospital'
+           AND s.name = 'Radiology'
+           AND aslt.starts_at = '2026-01-20 12:00:00+00'),
+        (SELECT st.id FROM staff st WHERE st.handle = 'radio_dt_01'),
+        'CONFIRMED',
+        '2026-01-20 09:26:00+00');
 
 
 -- Lab orders + results: create “missing result” gap
